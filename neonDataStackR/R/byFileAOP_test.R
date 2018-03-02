@@ -87,8 +87,8 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE) {
     }
   }
 
-  file.urls.init <- getFileUrls(month.urls)
-  downld.size <- sum(as.numeric(as.character(file.urls.init$size)), na.rm=T)/1e6
+  file.urls.current <- getFileUrls(month.urls)
+  downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)/1e6
   downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
 
   # ask user if they want to proceed
@@ -107,16 +107,33 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE) {
 
   # copy zip files into folder
 
-  for(i in 2:nrow(file.urls)) {
+  for(i in 2:nrow(file.urls.current)) {
     tryCatch(
-      {downloader::download(file.urls$URL[i], paste(filepath, file.urls$name[i], sep="/"), mode="wb")
+      {downloader::download(file.urls.current$URL[i], paste(filepath, file.urls$name[i], sep="/"), mode="wb")
         messages <- c(messages, paste(nrow(file.urls)-1, "files downloaded to",
                                       filepath, sep=" "))
         writeLines(paste0(messages[-1], collapse = "\n"))},
       error=function(err) {
-        warning("File could not be downloaded. URLs may have expired. Getting new URLs.")
-        stop("Download halted.")}
+        "File could not be downloaded. URLs may have expired. Getting new URLs."
+        file.urls.new <- getFileUrls(month.urls)
+        file.urls.current <- merge(file.urls.new, file.urls.current, by = names(file.urls.new), all = T)
+        writeLines("Continuing downloads.")
+        i = 1
+        downloader::download(file.urls.current$URL[i], paste(filepath, file.urls$name[i], sep="/"), mode="wb")
+        messages <- c(messages, paste(nrow(file.urls)-1, "files downloaded to",
+                                      filepath, sep=" "))
+        writeLines(paste0(messages[-1], collapse = "\n"))
+        }
     )
   }
 }
 
+y <- numeric()
+for(i in 1:length(x)){
+  t <- try(y <- c(y, 2*x[[i]]))
+  if (class(t) == "try-error"){
+    writeLines("You can't do that!")
+    x[[i]] <- 0
+    i <- i-1
+  }
+}
