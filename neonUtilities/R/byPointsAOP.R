@@ -13,18 +13,13 @@
 #' @param year The four-digit year to search for data. Defaults to 2017.
 #' @param check.size T or F, should the user be told the total file size before downloading? Defaults to T. When working in batch mode, or other non-interactive workflow, use check.size=F.
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
-#' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
-
+#' @param allSites Boolean. Download data for all sites and years.
 #' @return A folder in the working directory, containing all files meeting query criteria.
 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
 
 #' @export
-
-# Changelog and author contributions / copyrights
-#   Claire Lunch (2018-02-19): original creation
-#   Christine Laney (2018-03-05): Added functionality to get new list of URLs if the old ones expire, during the download stream.
 
 ##############################################################################################
 
@@ -99,8 +94,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   file.urls.current <- getFileUrls(month.urls)
   
   ##Select plots for a given site
-  plots<-sf::read_sf("neonUtilities/data/All_NEON_TOS_Plots_V5/All_Neon_TOS_Polygons_V5.shp")
-  
+  #plots<-sf::read_sf("neonUtilities/data/All_NEON_TOS_Plots_V5/All_Neon_TOS_Polygons_V5.shp")
   site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
   
   #Find geographic index of each plot
