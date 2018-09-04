@@ -110,7 +110,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   selected_tiles<-bind_rows(selected_tiles)
   
   #look for versions, only keep the highest number, group_by site
-  selected_tiles %>% mutate(version=as.numeric(str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
+  selected_tiles<-selected_tiles %>% mutate(version=as.numeric(str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
     group_by(plotID) %>% filter(version==max(version))
 
   filter.size <- sum(as.numeric(as.character(selected_tiles$size)), na.rm=T)
