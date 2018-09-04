@@ -15,7 +15,8 @@
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
 #' @param allSites Boolean. Download data for all sites and years.
 #' @return A folder in the working directory, containing all files meeting query criteria.
-
+#' importFrom magrittr "%>%"
+#' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
 
