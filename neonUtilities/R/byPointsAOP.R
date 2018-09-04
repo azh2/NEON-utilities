@@ -124,8 +124,8 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   # ask user if they want to proceed
   # can disable this with check.size=F
   if(check.size==TRUE) {
-    resp <- readline(paste("Continuing will download", nrow(file.urls.current), "files totaling approximately",
-                           downld.size.read, ". Do you want to proceed y/n: ", sep=" "))
+    resp <- readline(paste("Continuing will download", nrow(selected_tiles), "files totaling approximately",
+                           filter.size.read, ". Do you want to proceed y/n: ", sep=" "))
     if(!(resp %in% c("y","Y"))) {
       stop("Download halted.")
     }
