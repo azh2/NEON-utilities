@@ -60,7 +60,6 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
   }
 
 
-
   # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
   getFileUrls <- function(m.urls){
     url.messages <- character()
