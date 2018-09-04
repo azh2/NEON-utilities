@@ -120,7 +120,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
   downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
   
-  paste("Downloading" ,filter.size.read, "of",downld.size.read,"catalog")
+  print(paste("Downloading" ,filter.size.read, "of",downld.size.read,"catalog"))
   
   # ask user if they want to proceed
   # can disable this with check.size=F
