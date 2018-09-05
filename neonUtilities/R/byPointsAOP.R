@@ -15,7 +15,7 @@
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
 #' @param allSites Boolean. Download data for all sites and years.
 #' @return A folder in the working directory, containing all files meeting query criteria.
-#' importFrom magrittr "%>%"
+#' @importFrom magrittr "%>%"
 #' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -24,7 +24,7 @@
 
 ##############################################################################################
 
-byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=NA,allSites=F) {
+byPointsAOP <- function(ID, site="SJER", year="2017", check.size=TRUE, savepath=NA,allSites=F) {
   
   # error message if dpID isn't formatted as expected
   if(regexpr("DP[1-4]{1}.[0-9]{5}.001",dpID)!=1) {
@@ -99,7 +99,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
   
   #Find geographic index of each plot
-  site_plots<-site_plots %>% mutate(tile=paste(round(site_plots$easting,-3),round(site_plots$northing,-3),sep="_"))
+  site_plots<-site_plots %>% mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
   
   #Unique tiles
   tiles<-unique(site_plots$tile)
