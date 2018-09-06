@@ -110,9 +110,16 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   }
   selected_tiles<-bind_rows(selected_tiles)
   
-  #look for versions, only keep the highest number, group_by site
-  selected_tiles<-selected_tiles %>% mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
-    group_by(plotID) %>% filter(version==max(version))
+  if(dpID=="DP1.30010.001"){
+    #look for versions, only keep the highest number, group_by site
+    selected_tiles<-selected_tiles %>% mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
+      group_by(plotID) %>% filter(version==max(version))
+  }
+  
+  if(dpID=="DP1.30003.001"){
+    #Only classified laz
+    selected_tiles<-selected_tiles %>% filter(stringr::str_detect(name,"_classified_"))
+  }
 
   filter.size <- sum(as.numeric(as.character(selected_tiles$size)), na.rm=T)
   filter.size.read <- humanReadable(filter.size, units = "auto", standard = "SI")
