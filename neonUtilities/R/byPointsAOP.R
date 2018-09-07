@@ -56,7 +56,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   
   # error message if nothing is available
   if(length(month.urls)==0) {
-    stop("There are no data at the selected site and year.")
+    return("There are no data at the selected site and year.")
   }
   
   # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
@@ -161,7 +161,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   } else {
     filepath <- paste(savepath, "/", dpID, sep="")
   }
-  if(dir.exists(filepath) == F) dir.create(filepath, showWarnings=F)
+  if(dir.exists(filepath) == F) dir.create(filepath, showWarnings=T)
   
   # copy zip files into folder
   j <- 1
@@ -183,7 +183,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
       file.urls.current <- file.urls.new
       writeLines("Continuing downloads.")}
     if(class(t) != "try-error"){
-      messages[j] <- paste(file.urls.current$name[j], "downloaded to", newpath, sep=" ")
+      messages[j] <- paste(selected_tiles$name[j], "downloaded to", newpath, sep=" ")
       j = j + 1
     }
   }
