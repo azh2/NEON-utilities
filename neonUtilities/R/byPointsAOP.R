@@ -121,6 +121,22 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
     selected_tiles<-selected_tiles %>% filter(stringr::str_detect(name,"_classified_"))
   }
 
+  #Check which tiles have already been downloaded
+  filepath <- paste(savepath, "/", dpID, sep="")
+  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
+  pathparts <- strsplit(path1, "\\/")
+  path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
+  newpath <- paste0(filepath, "/", path2)
+  downloaded<-list.files(newpath)
+  
+  #remove downloaded tiles, stop if nothing left to download
+  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  
+  if(nrow(selected_tiles)==0){
+    print(paste(site,"no tiles to download"))
+    break
+  }
+  
   filter.size <- sum(as.numeric(as.character(selected_tiles$size)), na.rm=T)
   filter.size.read <- humanReadable(filter.size, units = "auto", standard = "SI")
   
