@@ -134,7 +134,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   
   if(nrow(selected_tiles)==0){
     print(paste(site,"no tiles to download"))
-    break
+    return(NULL)
   }
   
   filter.size <- sum(as.numeric(as.character(selected_tiles$size)), na.rm=T)
