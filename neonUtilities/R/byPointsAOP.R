@@ -62,7 +62,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
   
   file.urls.current <- getFileUrls(month.urls)
-  selected_tiles<-screenurls(site,file.urls.current,dpID)
+  selected_tiles<-screenurls(site,file.urls.current,dpID,savepath)
   
   if(nrow(selected_tiles)==0){
     print(paste(site,"no tiles to download"))
@@ -112,7 +112,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
     if(class(t) == "try-error"){
       writeLines("File could not be downloaded. URLs may have expired. Getting new URLs.")
       file.urls.new <- getFileUrls(month.urls)
-      selected_tiles<-screenurls(site,file.urls.new,dpID)
+      selected_tiles<-screenurls(site,file.urls.new,dpID,savepath)
       writeLines("Continuing downloads.")}
     if(class(t) != "try-error"){
       messages[j] <- paste(selected_tiles$name[j], "downloaded to", newpath, sep=" ")
@@ -123,7 +123,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   writeLines(paste0(messages, collapse = "\n"))
 }
 
-screenurls<-function(siteID,file.urls.current,dpID=dpID){
+screenurls<-function(siteID,file.urls.current,dpID=dpID,savepath=savepath){
   ##Select plots for a given site
   #plots<-sf::read_sf("neonUtilities/data/All_NEON_TOS_Plots_V5/All_Neon_TOS_Polygons_V5.shp")
   site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
