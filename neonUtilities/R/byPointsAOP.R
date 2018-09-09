@@ -60,77 +60,9 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   }
   
   # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
-  getFileUrls <- function(m.urls){
-    url.messages <- character()
-    file.urls <- c(NA, NA, NA,NA)
-    for(i in 1:length(m.urls)) {
-      tmp <- httr::GET(m.urls[i])
-      tmp.files <- jsonlite::fromJSON(httr::content(tmp, as="text"),
-                                      simplifyDataFrame=T, flatten=T)
-      
-      # check for no files
-      if(length(tmp.files$data$files)==0) {
-        url.messages <- c(url.messages, paste("No files found for site", tmp.files$data$siteCode,
-                                              "and year", tmp.files$data$month, sep=" "))
-        next
-      }
-      
-      file.urls <- rbind(file.urls, cbind(tmp.files$data$files$name,
-                                          tmp.files$data$files$url,
-                                          tmp.files$data$files$size,
-                                          tmp.files$data$siteCode))
-      
-      # get size info
-      file.urls <- data.frame(file.urls, row.names=NULL)
-      colnames(file.urls) <- c("name", "URL", "size","plotID")
-      file.urls$URL <- as.character(file.urls$URL)
-      file.urls$name <- as.character(file.urls$name)
-      
-      if(length(url.messages) > 0){writeLines(url.messages)}
-      file.urls <- file.urls[-1, ]
-      return(file.urls)
-    }
-  }
   
   file.urls.current <- getFileUrls(month.urls)
-  
-  ##Select plots for a given site
-  #plots<-sf::read_sf("neonUtilities/data/All_NEON_TOS_Plots_V5/All_Neon_TOS_Polygons_V5.shp")
-  site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
-  
-  #Find geographic index of each plot
-  site_plots<-site_plots %>% mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
-  
-  #Unique tiles
-  tiles<-unique(site_plots$tile)
-
-  selected_tiles<-list()
-  for(x in 1:length(tiles)){
-    selected_tiles[[x]]<-file.urls.current[stringr::str_detect(file.urls.current$name,tiles[x]),]
-  }
-  selected_tiles<-bind_rows(selected_tiles)
-  
-  if(dpID=="DP1.30010.001"){
-    #look for versions, only keep the highest number, group_by site
-    selected_tiles<-selected_tiles %>% mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
-      group_by(plotID) %>% filter(version==max(version))
-  }
-  
-  if(dpID=="DP1.30003.001"){
-    #Only classified laz
-    selected_tiles<-selected_tiles %>% filter(stringr::str_detect(name,"_classified_"))
-  }
-
-  #Check which tiles have already been downloaded
-  filepath <- paste(savepath, "/", dpID, sep="")
-  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
-  pathparts <- strsplit(path1, "\\/")
-  path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
-  newpath <- paste0(filepath, "/", path2)
-  downloaded<-list.files(newpath)
-  
-  #remove downloaded tiles, stop if nothing left to download
-  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  selected_tiles<-screenurls(file.urls.current,siteID)
   
   if(nrow(selected_tiles)==0){
     print(paste(site,"no tiles to download"))
@@ -181,6 +113,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
       writeLines("File could not be downloaded. URLs may have expired. Getting new URLs.")
       file.urls.new <- getFileUrls(month.urls)
       file.urls.current <- file.urls.new
+      selected_tiles<-screenurls(file.urls.current,siteID)
       writeLines("Continuing downloads.")}
     if(class(t) != "try-error"){
       messages[j] <- paste(selected_tiles$name[j], "downloaded to", newpath, sep=" ")
@@ -189,4 +122,77 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   }
   writeLines(paste("Successfully downloaded ", length(messages), " files."))
   writeLines(paste0(messages, collapse = "\n"))
+}
+
+screenurls<-function(siteID,file.urls.current){
+  ##Select plots for a given site
+  #plots<-sf::read_sf("neonUtilities/data/All_NEON_TOS_Plots_V5/All_Neon_TOS_Polygons_V5.shp")
+  site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
+  
+  #Find geographic index of each plot
+  site_plots<-site_plots %>% mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
+  
+  #Unique tiles
+  tiles<-unique(site_plots$tile)
+  
+  selected_tiles<-list()
+  for(x in 1:length(tiles)){
+    selected_tiles[[x]]<-file.urls.current[stringr::str_detect(file.urls.current$name,tiles[x]),]
+  }
+  selected_tiles<-bind_rows(selected_tiles)
+  
+  if(dpID=="DP1.30010.001"){
+    #look for versions, only keep the highest number, group_by site
+    selected_tiles<-selected_tiles %>% mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
+      group_by(plotID) %>% filter(version==max(version))
+  }
+  
+  if(dpID=="DP1.30003.001"){
+    #Only classified laz
+    selected_tiles<-selected_tiles %>% filter(stringr::str_detect(name,"_classified_"))
+  }
+  
+  #Check which tiles have already been downloaded
+  filepath <- paste(savepath, "/", dpID, sep="")
+  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
+  pathparts <- strsplit(path1, "\\/")
+  path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
+  newpath <- paste0(filepath, "/", path2)
+  downloaded<-list.files(newpath)
+  
+  #remove downloaded tiles, stop if nothing left to download
+  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  return(selected_tiles)
+}
+
+getFileUrls <- function(m.urls){
+  url.messages <- character()
+  file.urls <- c(NA, NA, NA,NA)
+  for(i in 1:length(m.urls)) {
+    tmp <- httr::GET(m.urls[i])
+    tmp.files <- jsonlite::fromJSON(httr::content(tmp, as="text"),
+                                    simplifyDataFrame=T, flatten=T)
+    
+    # check for no files
+    if(length(tmp.files$data$files)==0) {
+      url.messages <- c(url.messages, paste("No files found for site", tmp.files$data$siteCode,
+                                            "and year", tmp.files$data$month, sep=" "))
+      next
+    }
+    
+    file.urls <- rbind(file.urls, cbind(tmp.files$data$files$name,
+                                        tmp.files$data$files$url,
+                                        tmp.files$data$files$size,
+                                        tmp.files$data$siteCode))
+    
+    # get size info
+    file.urls <- data.frame(file.urls, row.names=NULL)
+    colnames(file.urls) <- c("name", "URL", "size","plotID")
+    file.urls$URL <- as.character(file.urls$URL)
+    file.urls$name <- as.character(file.urls$name)
+    
+    if(length(url.messages) > 0){writeLines(url.messages)}
+    file.urls <- file.urls[-1, ]
+    return(file.urls)
+  }
 }
