@@ -62,7 +62,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
   
   file.urls.current <- getFileUrls(month.urls)
-  selected_tiles<-screenurls(file.urls.current,siteID)
+  selected_tiles<-screenurls(site,file.urls.current)
   
   if(nrow(selected_tiles)==0){
     print(paste(site,"no tiles to download"))
@@ -112,8 +112,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
     if(class(t) == "try-error"){
       writeLines("File could not be downloaded. URLs may have expired. Getting new URLs.")
       file.urls.new <- getFileUrls(month.urls)
-      file.urls.current <- file.urls.new
-      selected_tiles<-screenurls(file.urls.current,siteID)
+      selected_tiles<-screenurls(site,file.urls.new)
       writeLines("Continuing downloads.")}
     if(class(t) != "try-error"){
       messages[j] <- paste(selected_tiles$name[j], "downloaded to", newpath, sep=" ")
