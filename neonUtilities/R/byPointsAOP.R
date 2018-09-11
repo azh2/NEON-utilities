@@ -99,6 +99,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   j <- 1
   messages <- list()
   while(j <= nrow(selected_tiles)) {
+    print(j)
     path1 <- strsplit(selected_tiles$URL[j], "\\?")[[1]][1]
     pathparts <- strsplit(path1, "\\/")
     path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
@@ -106,7 +107,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
     
     if(dir.exists(newpath) == F) dir.create(newpath, recursive = T)
     t <- try(downloader::download(selected_tiles$URL[j],
-                                  paste(newpath, selected_tiles$name[j], sep="/"),
+                                    paste(newpath, selected_tiles$name[j], sep="/"),
                                   mode="wb"), silent = T)
     
     if(class(t) == "try-error"){
@@ -125,7 +126,6 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
 
 screenurls<-function(siteID,file.urls.current,dpID=dpID,savepath=savepath){
   ##Select plots for a given site
-  #plots<-sf::read_sf("neonUtilities/data/All_NEON_TOS_Plots_V5/All_Neon_TOS_Polygons_V5.shp")
   site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
   
   #Find geographic index of each plot
