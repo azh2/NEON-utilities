@@ -13,7 +13,6 @@
 #' @param year The four-digit year to search for data. Defaults to 2017.
 #' @param check.size T or F, should the user be told the total file size before downloading? Defaults to T. When working in batch mode, or other non-interactive workflow, use check.size=F.
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
-#' @param allSites Boolean. Download data for all sites and years.
 #' @return A folder in the working directory, containing all files meeting query criteria.
 #' @importFrom magrittr "%>%"
 #' 
