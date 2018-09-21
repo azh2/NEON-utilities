@@ -94,6 +94,11 @@ ParallelFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, sav
   
   file.urls.current <- getFileUrls(month.urls)
 
+  #Just L3 data for rgb data
+  if(dpID=="DP1.30010.001"){
+    file.urls.current<-file.urls.current[str_detect(file.urls.current$URL,"/L3/"),]
+}
+  
   #Remove those that have been downloaded
   file.urls.current<-screenurls(file.urls.current,dpID,savepath)
   
@@ -141,6 +146,7 @@ screenurls<-function(selected_tiles,dpID,savepath){
   
   #remove downloaded tiles, stop if nothing left to download
   selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  
 }
 
 download_file<-function(file.urls.current,filepath){

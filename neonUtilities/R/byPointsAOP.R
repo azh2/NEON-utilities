@@ -128,6 +128,10 @@ screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
   ##Select plots for a given site
   site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
   
+  if(nrow(site_plots)==0){
+    stop("No vegetation data for the selected site")
+  }
+  
   #Find geographic index of each plot
   site_plots<-site_plots %>% mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
   
