@@ -24,7 +24,7 @@
 
 ##############################################################################################
 
-byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=NA,allSites=F) {
+byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=NA) {
   
   # error message if dpID isn't formatted as expected
   if(regexpr("DP[1-4]{1}.[0-9]{5}.001",dpID)!=1) {
@@ -50,9 +50,8 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   month.urls <- unlist(avail$data$siteCodes$availableDataUrls)
   
   #Get a specific site, or just select a year
-  if(!allSites==T){
-    month.urls <- month.urls[grep(paste(site, year, sep="/"), month.urls)]
-  }
+  month.urls <- month.urls[grep(paste(site, year, sep="/"), month.urls)]
+  
   
   # error message if nothing is available
   if(length(month.urls)==0) {
