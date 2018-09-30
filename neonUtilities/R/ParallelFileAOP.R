@@ -121,7 +121,7 @@ ParallelFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, sav
   #Split into segments
   file_lists<-split(file.urls.current , f = rep_len(1:cores, nrow(file.urls.current) ) )
   
-  cl<-snow::makeCluster(cores,"SOCK")
+  cl<-snow::makeCluster(cores,"SOCK",outfile="")
   doSNOW::registerDoSNOW(cl)
   
   messages<-foreach::foreach(x=1:length(file_lists),.errorhandling = "pass",.export = c("file_lists","download_file")) %dopar% {
