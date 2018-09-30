@@ -95,10 +95,10 @@ ParallelFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, sav
   file.urls.current <- getFileUrls(month.urls)
 
   #Remove those that have been downloaded
-  file.urls.current<-screenurls(file.urls.current,dpID,savepath)
+  file.urls.current<-select_urls(file.urls.current,dpID,savepath)
   
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
-  downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
+  downld.size.read <- gdata::humanReadable(downld.size, units = "auto", standard = "SI")
   
   # ask user if they want to proceed
   # can disable this with check.size=F
@@ -124,13 +124,13 @@ ParallelFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, sav
   cl<-snow::makeCluster(cores,"SOCK")
   doSNOW::registerDoSNOW(cl)
   
-  messages<-foreach(x=1:length(file_lists),.errorhandling = "pass",.export = c("file_lists","download_file")) %dopar% {
+  messages<-foreach::foreach(x=1:length(file_lists),.errorhandling = "pass",.export = c("file_lists","download_file")) %dopar% {
     download_file(file_lists[[x]],filepath)
   }
   print(messages)
 }
 
-screenurls<-function(selected_tiles,dpID,savepath){
+select_urls<-function(selected_tiles,dpID,savepath){
   #Check which tiles have already been downloaded
   filepath <- paste(savepath, "/", dpID, sep="")
   path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
