@@ -4,7 +4,7 @@
 #' @author
 #' Claire Lunch \email{clunch@battelleecology.org}
 #' Christine Laney \email{claney@battelleecology.org}
-
+#' Ben Weinstein \email{ben.weinstein@weecolog.org}
 #' @description
 #' Query the API for AOP data by site, year, and product, and download all files found, preserving original
 #' folder structure. Downloads serially to avoid overload; may take a very long time.
