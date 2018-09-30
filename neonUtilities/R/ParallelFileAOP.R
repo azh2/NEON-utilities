@@ -119,7 +119,7 @@ ParallelFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, sav
   if(dir.exists(filepath) == F) dir.create(filepath, showWarnings=F)
   
   #Split into segments
-  file_lists<-split(df , f = rep_len(1:cores, nrow(df) ) )
+  file_lists<-split(file.urls.current , f = rep_len(1:cores, nrow(file.urls.current) ) )
   
   cl<-snow::makeCluster(cores,"SOCK")
   doSNOW::registerDoSNOW(cl)
