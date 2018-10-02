@@ -125,7 +125,7 @@ ParallelFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, sav
   doSNOW::registerDoSNOW(cl)
   
   messages<-foreach::foreach(x=1:length(file_lists),.errorhandling = "pass",.export = c("file_lists","download_file")) %dopar% {
-    download_file(file_lists[[x]],filepath)
+    download_file(file_lists[[x]],filepath,month.urls)
   }
   print(messages)
 }
@@ -144,7 +144,7 @@ select_urls<-function(selected_tiles,dpID,savepath){
   
 }
 
-download_file<-function(file.urls.current,filepath){
+download_file<-function(file.urls.current,filepath,month.urls){
   # copy zip files into folder
   j <- 1
   messages <- list()
