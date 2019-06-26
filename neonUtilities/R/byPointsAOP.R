@@ -15,7 +15,7 @@
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
 #' @return A folder in the working directory, containing all files meeting query criteria.
 #' @importFrom magrittr "%>%"
-#' @import dplyr
+#' @importFrom dplyr mutate filter select
 #' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
