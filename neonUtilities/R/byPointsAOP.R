@@ -51,14 +51,12 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   #Get a specific site, or just select a year
   month.urls <- month.urls[grep(paste(site, year, sep="/"), month.urls)]
   
-  
   # error message if nothing is available
   if(length(month.urls)==0) {
     return("There are no data at the selected site and year.")
   }
   
   # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
-  
   file.urls.current <- getFileUrls(month.urls)
   selected_tiles<-screenurls(site,file.urls.current,dpID,savepath)
   
@@ -123,8 +121,10 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
 }
 
 screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
+  
   ##Select plots for a given site
-  site_plots<-plots %>% filter(siteID==site) %>% select(siteID,plotID,easting,northing)
+  data(package="neonUtilities","plots")
+  site_plots<-plots %>% filter(siteID==site) %>% dplyr::select(siteID,plotID,easting,northing)
   
   if(nrow(site_plots)==0){
     stop("No vegetation data for the selected site")
