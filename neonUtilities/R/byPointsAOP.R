@@ -15,6 +15,7 @@
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
 #' @return A folder in the working directory, containing all files meeting query criteria.
 #' @importFrom magrittr "%>%"
+#' @import dplyr
 #' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -124,6 +125,7 @@ screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
   
   ##Select plots for a given site
   data(package="neonUtilities","plots")
+  print(head(plots))
   site_plots<-plots %>% filter(siteID==site) %>% dplyr::select(siteID,plotID,easting,northing)
   
   if(nrow(site_plots)==0){
