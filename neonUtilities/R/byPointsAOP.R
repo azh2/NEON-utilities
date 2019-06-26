@@ -141,7 +141,7 @@ screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
   for(x in 1:length(tiles)){
     selected_tiles[[x]]<-file.urls.current[stringr::str_detect(file.urls.current$name,tiles[x]),]
   }
-  selected_tiles<-bind_rows(selected_tiles)
+  selected_tiles<-dplyr::bind_rows(selected_tiles)
   
   if(dpID=="DP1.30010.001"){
     #look for versions, only keep the highest number, group_by site
