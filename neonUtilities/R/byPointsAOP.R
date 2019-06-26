@@ -126,7 +126,7 @@ screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
   ##Select plots for a given site
   data(package="neonUtilities","plots")
   print(head(plots))
-  site_plots<-plots %>% filter(siteID==site) %>% dplyr::select(siteID,plotID,easting,northing)
+  site_plots<-plots %>% dplyr::filter(siteID==site) %>% dplyr::select(siteID,plotID,easting,northing)
   
   if(nrow(site_plots)==0){
     stop("No vegetation data for the selected site")
