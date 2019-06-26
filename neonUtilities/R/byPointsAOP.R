@@ -15,7 +15,6 @@
 #' @param savepath The file path to download to. Defaults to NA, in which case the working directory is used.
 #' @return A folder in the working directory, containing all files meeting query criteria.
 #' @importFrom magrittr "%>%"
-#' @importFrom dplyr mutate filter select
 #' 
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
@@ -133,7 +132,7 @@ screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
   }
   
   #Find geographic index of each plot
-  site_plots<-site_plots %>% mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
+  site_plots<-site_plots %>% dplyr::mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
   
   #Unique tiles
   tiles<-unique(site_plots$tile)
@@ -146,13 +145,13 @@ screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
   
   if(dpID=="DP1.30010.001"){
     #look for versions, only keep the highest number, group_by site
-    selected_tiles<-selected_tiles %>% mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
-      group_by(plotID) %>% filter(version==max(version))
+    selected_tiles<-selected_tiles %>% dplyr::mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
+      group_by(plotID) %>% dplyr::filter(version==max(version))
   }
   
   if(dpID=="DP1.30003.001"){
     #Only classified laz
-    selected_tiles<-selected_tiles %>% filter(stringr::str_detect(name,"_classified_"))
+    selected_tiles<-selected_tiles %>% dplyr::filter(stringr::str_detect(name,"_classified_"))
   }
   
   #Check which tiles have already been downloaded
