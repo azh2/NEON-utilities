@@ -29,7 +29,7 @@ stackDataFiles <- function(folder){
   starttime <- Sys.time()
 
   # get the in-memory list of table types (site-date, site-all, etc.). This list must be updated often.
-  data("table_types")
+  #data("table_types")
   ttypes <- table_types
 
   # filenames without full path
@@ -39,7 +39,7 @@ stackDataFiles <- function(folder){
   filepaths <- findDatatables(folder = folder, fnames = T)
 
   # make a list, where filenames are the keys to the filepath values
-  filelist <- setNames(as.list(filepaths), filenames)
+  filelist <- stats::setNames(as.list(filepaths), filenames)
 
   datafls <- filelist
 
@@ -64,9 +64,12 @@ stackDataFiles <- function(folder){
     # find external lab tables (lab-current, lab-all) and copy the first file from each lab into stackedFiles
     labTables <- tables[which(tables %in% table_types$tableName[which(table_types$tableType %in% c("lab-current","lab-all"))])]
     if(length(labTables)>0){
-      labFilePaths <- filepaths[grep(labTables, filepaths)]
+      labFilePaths <- character()
       labFiles <- character()
-      labFiles <- unique(filenames[grep(labTables, filenames)])
+      for(m in 1:length(labTables)) {
+        labFilePaths <- c(labFilePaths, filepaths[grep(labTables[m], filepaths)])
+        labFiles <- c(labFiles, unique(filenames[grep(labTables[m], filenames)]))
+      }
       if(length(labFiles)>0){
         for(l in 1:length(labFiles)){
           file.copy(from = labFilePaths[grep(labFiles[l], labFilePaths)][1], to = paste0(folder, "/stackedFiles/"))
@@ -99,10 +102,10 @@ stackDataFiles <- function(folder){
       tables <- c(tables, "validation")
     }
 
-    n <- 1
+    n <- 0
 
     for(i in 1:length(tables)){
-      tbltype <- ttypes$tableType[which(ttypes$tableName == gsub(tables[i], pattern = "_pub", replacement = ""))]
+      tbltype <- unique(ttypes$tableType[which(ttypes$tableName == gsub(tables[i], pattern = "_pub", replacement = ""))])
       variables <- getVariables(varpath)  # get the variables from the chosen variables file
 
       if((length(tbltype)==0 && !(tables[i] %in% c("variables","validation"))) || (length(tbltype) > 0 && tbltype == "site-all")){
@@ -111,8 +114,8 @@ stackDataFiles <- function(folder){
         utils::setTxtProgressBar(pb, 0)
         #tblfls <- filepaths[grep(tables[i], filepaths, fixed=T)]
         #tblnames <- filenames[grep(tables[i], filenames, fixed=T)]
-        tblfls <- filepaths[grep(paste(".", tables[i], sep=""), filepaths, fixed=T)]
-        tblnames <- filenames[grep(paste(".", tables[i], sep=""), filenames, fixed=T)]
+        tblfls <- filepaths[grep(paste(".", tables[i], ".", sep=""), filepaths, fixed=T)]
+        tblnames <- filenames[grep(paste(".", tables[i], ".", sep=""), filenames, fixed=T)]
         sites <- unique(substr(tblnames, 10, 13))
         sites <- sites[order(sites)]
         d <- suppressWarnings(data.table::fread(tblfls[grep(sites[1], tblfls)][1], header = T))
@@ -132,10 +135,10 @@ stackDataFiles <- function(folder){
             utils::setTxtProgressBar(pb, (i*j)/length(tblfls))
           }
         }
-        write.csv(d, paste0(folder, "/stackedFiles/", tables[i], ".csv"), row.names = F)
+        utils::write.csv(d, paste0(folder, "/stackedFiles/", tables[i], ".csv"), row.names = F)
         messages <- c(messages, paste0("Stacked ", tables[i], " which has ", numRows, " out of the expected ",
                                        nrow(d), " rows (", (numRows/nrow(d))*100, "%)."))
-        if(i > 1){n <- n + 1}
+        n <- n + 1
         utils::setTxtProgressBar(pb, 1)
         close(pb)
       }
@@ -147,8 +150,8 @@ stackDataFiles <- function(folder){
         utils::setTxtProgressBar(pb, 0)
         #tblfls <- filepaths[grep(tables[i], filepaths, fixed=T)]
         #tblnames <- filenames[grep(tables[i], filenames, fixed=T)]
-        tblfls <- filepaths[grep(paste(".", tables[i], sep=""), filepaths, fixed=T)]
-        tblnames <- filenames[grep(paste(".", tables[i], sep=""), filenames, fixed=T)]
+        tblfls <- filepaths[grep(paste(".", tables[i], ".", sep=""), filepaths, fixed=T)]
+        tblnames <- filenames[grep(paste(".", tables[i], ".", sep=""), filenames, fixed=T)]
         d <- suppressWarnings(data.table::fread(tblfls[1], header = T))
         d <- assignClasses(d, variables)
         d <- makePosColumns(d, tblnames[1])
@@ -164,17 +167,17 @@ stackDataFiles <- function(folder){
             utils::setTxtProgressBar(pb, (i*j)/length(tblfls))
           }
         }
-        write.csv(d, paste0(folder, "/stackedFiles/", tables[i], ".csv"), row.names = F)
+        utils::write.csv(d, paste0(folder, "/stackedFiles/", tables[i], ".csv"), row.names = F)
         messages <- c(messages, paste0("Stacked ", tables[i], " which has ", numRows, " out of the expected ",
                                       nrow(d), " rows (", (numRows/nrow(d))*100, "%)."))
-        if(i > 1){n <- n + 1}
+        n <- n + 1
         utils::setTxtProgressBar(pb, 1)
         close(pb)
       }
     }
   }
 
-  writeLines(paste("Finished: All of the data are stacked into ", n, " tables!"))
+  writeLines(paste("Finished: All of the data are stacked into", n, "tables!"))
   writeLines(paste0(messages, collapse = "\n"))
   endtime <- Sys.time()
   writeLines(paste0("Stacking took ", format((endtime-starttime), units = "auto")))

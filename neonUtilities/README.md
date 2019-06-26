@@ -5,7 +5,9 @@ NEON-utilities/neonUtilities
 Description
 -----
 
-The `neonUtilities` R package provides utilites for discovering, downloading, and working with NEON data files. NEON data files can be downloaded from the NEON Data Portal (http://data.neonscience.org) or API (http://data.neonscience.org/data-api). Provisional NEON data files from instrumented and observation systems are delivered by NEON within zip files organized by site and year-month. Provisional NEON data files from the airborne observation platform (AOP) are organized by site and year. 
+The `neonUtilities` R package provides utilities for discovering, downloading, and working with NEON data files. NEON data files can be downloaded from the NEON Data Portal (http://data.neonscience.org) or API (http://data.neonscience.org/data-api). Provisional NEON data files from instrumented and observation systems are delivered by NEON within zip files organized by site and year-month. Provisional NEON data files from the airborne observation platform (AOP) are organized by site and year.
+
+`neonUtilities` is available [on CRAN](https://CRAN.R-project.org/package=neonUtilities) and most users will want to install it from there. If you want to use the current development version, you can install from GitHub, but be warned that the version here may not be stable.
 
 This package was developed on top of the deprecated `neonDataStackR` package; change logs from that package are included below.
 
@@ -17,9 +19,9 @@ Usage
 
 ### Starting out
 Install the package into your local environment using the following code:
+
 ```
-library(devtools)
-install_github("NEONScience/NEON-utilities/neonUtilities", dependencies=TRUE)
+install.packages('neonUtilities')
 library(neonUtilities)
 ```
 
@@ -29,6 +31,12 @@ library(neonUtilities)
 
 ```
 stackByTable(filepath = "testdata/NEON_size-dust-particulate.zip") # modify filepath to your directory
+```
+
+To load data directly into the current R environment, instead of saving the stacked files to the filepath, use the option `savepath='envt'`. When using this option, assign the output of the function to a variable name. The output object will be a named list of data tables.
+
+```
+dust <- stackByTable(filepath = "testdata/NEON_size-dust-particulate.zip", savepath="envt")
 ```
 
 `getPackage()` can be used to pull a single zip file (all the data for a single data product by site by month combination) using the NEON API.
@@ -48,6 +56,19 @@ stackByTable(paste0(getwd(), "/filesToStack10023"), folder=T)
 }
 ```
 
+`loadByProduct()` performs the actions of both `zipsByProduct()` and `stackByTable()` and loads the resulting data into the current R environment. The object output by `loadByProduct()` is a named list of tables.
+
+```
+bird <- loadByProduct(dpID="DP1.10003.001", site="all", package="expanded")
+names(bird)
+```
+
+Both `zipsByProduct()` and `loadByProduct()` can also subset by sites and date range:
+
+```
+wq <- loadByProduct(dpID="DP1.20288.001", site=c("ARIK","POSE"), startdate="2018-04", enddate="2018-08")
+```
+
 `byFileAOP()` pulls data from the NEON API, specifically for remote sensing (AOP) data. This function preserves the file directory hierarchy that AOP files are typically stored in, making it easier to navigate a large number of downloaded files.
 
 ```
@@ -55,13 +76,21 @@ stackByTable(paste0(getwd(), "/filesToStack10023"), folder=T)
 byFileAOP(dpID = "DP3.30001.001", site = "SRER", year = "2017", check.size = T)
 ```
 
+`byTileAOP()` pulls AOP data from the NEON API, for tiles matching the coordinates specified in the function call. A buffer can also be included in the function call, to download tiles within a certain distance of the coordinates (e.g., if the coordinates are the plot centroids of NEON TOS plots, use buffer=20). `byTileAOP()` will only work on the Level 3, mosaicked AOP products.
+
+```
+# Vegetation indices from San Joaquin Experimental Range, 2017
+# easting and northing must be matched vectors of UTM coordinates
+byTileAOP(dpID="DP3.30026.001", site="SJER", year="2017", easting=easting, northing=northing, buffer=20)
+```
+
 `transformFileToGeoCSV()` takes any single NEON csv data file plus its respective variables file, and generates a new CSV with [GeoCSV](http://geows.ds.iris.edu/documents/GeoCSV.pdf) headers. This makes the data similar in format to data provided by organizations such as UNAVCO, and is good for embedding in a repeating script.
 
 ### Getting help with this package
- 
+
 For a tutorial explaining how to use the `neonUtilities` package in more detail, including additional input options, view the [*Use the neonUtilities Package to Access NEON Data* tutorial](http://www.neonscience.org/neonDataStackR).
 
-### Known issues 
+### Known issues
 * `zipsByProduct()` and `byFileAOP()` use the `download.file()` function, wrapped by the `downloader` package, and we've found in testing that `download.file()` can be finicky. Using R version > 3.4 seems to help, and if you're on Windows, using Windows 10. Feel free to contact us if you run into problems!
 * The file cleanup option in `stackByTable()` deletes the unstacked files after stacking, but it doesn't work correctly when used in combination with filtering by averaging interval (`avg=X` option in `zipsByProduct()`). This will be fixed in a future release.
 
@@ -85,6 +114,50 @@ Disclaimer
 <!-- ****** Change Log ****** -->
 Change Log
 ----------
+
+#### 2019-03-04 v1.2.2
+-----------
+Bug fixes:
+* working progress bar in `byFileAOP()` and `byTileAOP()`
+
+Enhancements:
+* initial version of `zipsByURI()` to download via URLs within data
+
+
+#### 2019-03-04 v1.2.1
+-----------
+Bug fixes:
+* fixed bug in `stackByTable()` that deleted existing files when using `savepath` argument
+* fixed bug in `getDatatable()` that created incorrect urls
+
+Enhancements:
+* enabled date and site subsetting in `zipsByProduct()`
+
+
+#### 2019-01-24 v1.2.0
+-----------
+Bug fixes:
+* fixed bug in `stackByTable()` that merged tables with overlapping names
+* fixed bug in `zipsByProduct()` `avg=` option that only worked for a subset of data products
+* fixed bug in `stackByTable()` that failed unzipping if savepath=filepath
+
+Enhancements:
+* added `getDatatable()`
+* added option to `stackByTable()` to load files into the R environment
+* added progress bar to `zipsByProduct()`
+* added `loadByProduct()` to download and load files in one step
+
+
+#### 2018-11-13 v1.0.1
+------------
+* patch to change testing to use temporary directory for test files
+* fixed bug in stackByTable() that deleted URLs for ECS files
+
+
+#### 2018-11-03 v1.0.0
+------------
+* version for initial CRAN release!
+* added `byTileAOP()` to download only AOP tiles corresponding to certain coordinates
 
 #### 2018-05-23 v0.1.1 'pine'
 --------------

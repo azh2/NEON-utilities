@@ -17,6 +17,12 @@
 
 #' @return A folder in the working directory, containing all files meeting query criteria.
 
+#' @examples
+#' \dontrun{
+#' # To download 2017 vegetation index data from San Joaquin Experimental Range:
+#' byFileAOP(dpID="DP3.30026.001", site="SJER", year="2017")
+#' }
+
 #' @references
 #' License: GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007
 
@@ -117,6 +123,9 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
   # copy zip files into folder
   j <- 1
   messages <- list()
+  writeLines(paste("Downloading ", nrow(file.urls.current), " files", sep=""))
+  pb <- utils::txtProgressBar(style=3)
+  utils::setTxtProgressBar(pb, 1/(nrow(file.urls.current)-1))
   while(j <= nrow(file.urls.current)) {
     path1 <- strsplit(file.urls.current$URL[j], "\\?")[[1]][1]
     pathparts <- strsplit(path1, "\\/")
@@ -126,7 +135,7 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
     if(dir.exists(newpath) == F) dir.create(newpath, recursive = T)
     t <- try(downloader::download(file.urls.current$URL[j],
                                   paste(newpath, file.urls.current$name[j], sep="/"),
-                                  mode="wb"), silent = T)
+                                  mode="wb", quiet=T), silent = T)
 
     if(class(t) == "try-error"){
       writeLines("File could not be downloaded. URLs may have expired. Getting new URLs.")
@@ -137,7 +146,11 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
       messages[j] <- paste(file.urls.current$name[j], "downloaded to", newpath, sep=" ")
       j = j + 1
     }
+    utils::setTxtProgressBar(pb, j/(nrow(file.urls.current)-1))
   }
+  utils::setTxtProgressBar(pb, 1)
+  close(pb)
+  
   writeLines(paste("Successfully downloaded ", length(messages), " files."))
   writeLines(paste0(messages, collapse = "\n"))
 }
