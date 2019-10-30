@@ -98,10 +98,11 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
     }
   }
 
+  file.urls.current <- getFileUrls(month.urls)
+  
   #Remove those that have been downloaded
   file.urls.current<-select_urls(file.urls.current,dpID,savepath)
   
-  file.urls.current <- getFileUrls(month.urls)
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
   downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
 
@@ -168,6 +169,8 @@ select_urls<-function(selected_tiles,dpID,savepath){
   downloaded<-list.files(newpath)
   
   #remove downloaded tiles, stop if nothing left to download
+  selected_tiles<-selected_tiles[selected_tiles$name %in% downloaded,]
+  paste("Skipping", len(selected_tiles), "files that have already been downloaded to",savepath)
   selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
-  
+  return(selected_tiles)
 }
