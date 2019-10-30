@@ -98,6 +98,9 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
     }
   }
 
+  #Remove those that have been downloaded
+  file.urls.current<-select_urls(file.urls.current,dpID,savepath)
+  
   file.urls.current <- getFileUrls(month.urls)
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
   downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
@@ -153,4 +156,18 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
   
   writeLines(paste("Successfully downloaded ", length(messages), " files."))
   writeLines(paste0(messages, collapse = "\n"))
+}
+
+select_urls<-function(selected_tiles,dpID,savepath){
+  #Check which tiles have already been downloaded
+  filepath <- paste(savepath, "/", dpID, sep="")
+  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
+  pathparts <- strsplit(path1, "\\/")
+  path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
+  newpath <- paste0(filepath, "/", path2)
+  downloaded<-list.files(newpath)
+  
+  #remove downloaded tiles, stop if nothing left to download
+  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  
 }
