@@ -170,7 +170,7 @@ select_urls<-function(selected_tiles,dpID,savepath){
   
   #remove downloaded tiles, stop if nothing left to download
   selected_tiles<-selected_tiles[selected_tiles$name %in% downloaded,]
-  paste("Skipping", length(selected_tiles), "files that have already been downloaded to",savepath)
+  print(paste("Skipping", length(selected_tiles), "files that have already been downloaded to",savepath))
   selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
   return(selected_tiles)
 }
