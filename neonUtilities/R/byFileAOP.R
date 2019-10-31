@@ -65,43 +65,10 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
     stop("There are no data at the selected site and year.")
   }
 
-
-  # get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
-  getFileUrls <- function(m.urls){
-    url.messages <- character()
-    file.urls <- c(NA, NA, NA)
-    for(i in 1:length(m.urls)) {
-      tmp <- httr::GET(m.urls[i])
-      tmp.files <- jsonlite::fromJSON(httr::content(tmp, as="text"),
-                                      simplifyDataFrame=T, flatten=T)
-
-      # check for no files
-      if(length(tmp.files$data$files)==0) {
-        url.messages <- c(url.messages, paste("No files found for site", tmp.files$data$siteCode,
-                                      "and year", tmp.files$data$month, sep=" "))
-        next
-      }
-
-      file.urls <- rbind(file.urls, cbind(tmp.files$data$files$name,
-                                          tmp.files$data$files$url,
-                                          tmp.files$data$files$size))
-
-      # get size info
-      file.urls <- data.frame(file.urls, row.names=NULL)
-      colnames(file.urls) <- c("name", "URL", "size")
-      file.urls$URL <- as.character(file.urls$URL)
-      file.urls$name <- as.character(file.urls$name)
-
-      if(length(url.messages) > 0){writeLines(url.messages)}
-      file.urls <- file.urls[-1, ]
-      return(file.urls)
-    }
-  }
-
   file.urls.current <- getFileUrls(month.urls)
   
   #Remove those that have been downloaded
-  file.urls.current<-select_urls(file.urls.current,dpID,savepath)
+  file.urls.current<-select_urls(file.urls.current,dpID,year,savepath)
   
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
   downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
@@ -159,18 +126,58 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
   writeLines(paste0(messages, collapse = "\n"))
 }
 
-select_urls<-function(selected_tiles,dpID,savepath){
+select_urls<-function(file.urls.current,dpID,year,savepath){
+  
+  #What type of files do you want? just classified laz
+  if(dpID == "DP1.30003.001"){
+    file.urls.current<-file.urls.current[stringr::str_detect(file.urls.current$name, "classified"),]
+    file.urls.current<-file.urls.current[stringr::str_detect(file.urls.current$name, ".laz"),]
+    
+  }
+  
   #Check which tiles have already been downloaded
   filepath <- paste(savepath, "/", dpID, sep="")
-  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
+  path1 <- strsplit(file.urls.current$URL[1], "\\?")[[1]][1]
   pathparts <- strsplit(path1, "\\/")
   path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
   newpath <- paste0(filepath, "/", path2)
   downloaded<-list.files(newpath)
   
   #remove downloaded tiles, stop if nothing left to download
-  selected_tiles<-selected_tiles[selected_tiles$name %in% downloaded,]
-  print(paste("Skipping", nrow(selected_tiles), "files that have already been downloaded to",savepath))
-  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  file.urls.current<-file.urls.current[file.urls.current$name %in% downloaded,]
+  print(paste("Skipping", nrow(file.urls.current), "files that have already been downloaded to",savepath))
+  selected_tiles<-file.urls.current[!file.urls.current$name %in% downloaded,]
   return(selected_tiles)
+}
+
+# get and stash the file names, S3 URLs, file size, and download status (default = 0) in a data frame
+getFileUrls <- function(m.urls){
+  url.messages <- character()
+  file.urls <- c(NA, NA, NA)
+  for(i in 1:length(m.urls)) {
+    tmp <- httr::GET(m.urls[i])
+    tmp.files <- jsonlite::fromJSON(httr::content(tmp, as="text"),
+                                    simplifyDataFrame=T, flatten=T)
+    
+    # check for no files
+    if(length(tmp.files$data$files)==0) {
+      url.messages <- c(url.messages, paste("No files found for site", tmp.files$data$siteCode,
+                                            "and year", tmp.files$data$month, sep=" "))
+      next
+    }
+    
+    file.urls <- rbind(file.urls, cbind(tmp.files$data$files$name,
+                                        tmp.files$data$files$url,
+                                        tmp.files$data$files$size))
+    
+    # get size info
+    file.urls <- data.frame(file.urls, row.names=NULL)
+    colnames(file.urls) <- c("name", "URL", "size")
+    file.urls$URL <- as.character(file.urls$URL)
+    file.urls$name <- as.character(file.urls$name)
+    
+    if(length(url.messages) > 0){writeLines(url.messages)}
+    file.urls <- file.urls[-1, ]
+    return(file.urls)
+  }
 }
