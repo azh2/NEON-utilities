@@ -68,7 +68,7 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
   file.urls.current <- getFileUrls(month.urls)
   
   #Remove those that have been downloaded
-  file.urls.current<-select_urls(file.urls.current,dpID,year,savepath)
+  file.urls.current<-select_urls(file.urls.current,dpID,savepath)
   
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
   downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
@@ -126,7 +126,7 @@ byFileAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=
   writeLines(paste0(messages, collapse = "\n"))
 }
 
-select_urls<-function(file.urls.current,dpID,year,savepath){
+select_urls<-function(file.urls.current,dpID,savepath){
   
   #What type of files do you want? just classified laz
   if(dpID == "DP1.30003.001"){
@@ -144,8 +144,9 @@ select_urls<-function(file.urls.current,dpID,year,savepath){
   downloaded<-list.files(newpath)
   
   #remove downloaded tiles, stop if nothing left to download
-  file.urls.current<-file.urls.current[file.urls.current$name %in% downloaded,]
-  print(paste("Skipping", nrow(file.urls.current), "files that have already been downloaded to",savepath))
+  toskip<-file.urls.current[file.urls.current$name %in% downloaded,]
+  print(paste("Skipping", nrow(toskip), "files that have already been downloaded to",savepath))
+  
   selected_tiles<-file.urls.current[!file.urls.current$name %in% downloaded,]
   return(selected_tiles)
 }
