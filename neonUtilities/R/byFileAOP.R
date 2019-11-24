@@ -130,7 +130,7 @@ select_urls<-function(file.urls.current,dpID,savepath){
   
   #What type of files do you want? just classified laz
   if(dpID == "DP1.30003.001"){
-    file.urls.current<-file.urls.current[stringr::str_detect(file.urls.current$name, "classified"),]
+    file.urls.current<-file.urls.current[stringr::str_detect(file.urls.current$name, "_classified"),]
     file.urls.current<-file.urls.current[stringr::str_detect(file.urls.current$name, ".laz"),]
     
   }
@@ -145,7 +145,7 @@ select_urls<-function(file.urls.current,dpID,savepath){
   
   #remove downloaded tiles, stop if nothing left to download
   toskip<-file.urls.current[file.urls.current$name %in% downloaded,]
-  print(paste("Skipping", nrow(toskip), "files that have already been downloaded to",savepath))
+  print(paste("Skipping", nrow(toskip),"of",nrow(file.urls.current), "files that have already been downloaded to",newpath))
   
   selected_tiles<-file.urls.current[!file.urls.current$name %in% downloaded,]
   return(selected_tiles)
