@@ -120,7 +120,7 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   writeLines(paste0(messages, collapse = "\n"))
 }
 
-screenurls<-function(site,file.urls.current,dpID=dpID,savepath=savepath){
+screenurls<-function(site,file.urls.current,dpID,savepath){
   
   ##Select plots for a given site
   data(package="neonUtilities","plots")
