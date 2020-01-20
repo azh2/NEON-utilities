@@ -22,6 +22,84 @@
 #' @export
 
 ##############################################################################################
+getFileUrls <- function(m.urls){
+  url.messages <- character()
+  file.urls <- c(NA, NA, NA,NA)
+  for(i in 1:length(m.urls)) {
+    tmp <- httr::GET(m.urls[i])
+    tmp.files <- jsonlite::fromJSON(httr::content(tmp, as="text"),
+                                    simplifyDataFrame=T, flatten=T)
+    
+    # check for no files
+    if(length(tmp.files$data$files)==0) {
+      url.messages <- c(url.messages, paste("No files found for site", tmp.files$data$siteCode,
+                                            "and year", tmp.files$data$month, sep=" "))
+      next
+    }
+    
+    file.urls <- rbind(file.urls, cbind(tmp.files$data$files$name,
+                                        tmp.files$data$files$url,
+                                        tmp.files$data$files$size,
+                                        tmp.files$data$siteCode))
+    
+    # get size info
+    file.urls <- data.frame(file.urls, row.names=NULL)
+    colnames(file.urls) <- c("name", "URL", "size","plotID")
+    file.urls$URL <- as.character(file.urls$URL)
+    file.urls$name <- as.character(file.urls$name)
+    
+    if(length(url.messages) > 0){writeLines(url.messages)}
+    file.urls <- file.urls[-1, ]
+    return(file.urls)
+  }
+}
+
+screenurls<-function(site,file.urls.current,dpID,savepath){
+  
+  ##Select plots for a given site
+  data(package="neonUtilities","plots")
+  print(head(plots))
+  site_plots<-plots %>% dplyr::filter(siteID==site) %>% dplyr::select(siteID,plotID,easting,northing)
+  
+  if(nrow(site_plots)==0){
+    stop("No vegetation data for the selected site")
+  }
+  
+  #Find geographic index of each plot
+  site_plots<-site_plots %>% dplyr::mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
+  
+  #Unique tiles
+  tiles<-unique(site_plots$tile)
+  
+  selected_tiles<-list()
+  for(x in 1:length(tiles)){
+    selected_tiles[[x]]<-file.urls.current[stringr::str_detect(file.urls.current$name,tiles[x]),]
+  }
+  selected_tiles<-dplyr::bind_rows(selected_tiles)
+  
+  if(dpID=="DP1.30010.001"){
+    #look for versions, only keep the highest number, group_by site
+    selected_tiles<-selected_tiles %>% dplyr::mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
+      group_by(plotID) %>% dplyr::filter(version==max(version))
+  }
+  
+  if(dpID=="DP1.30003.001"){
+    #Only classified laz
+    selected_tiles<-selected_tiles %>% dplyr::filter(stringr::str_detect(name,"_classified_"))
+  }
+  
+  #Check which tiles have already been downloaded
+  filepath <- paste(savepath, "/", dpID, sep="")
+  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
+  pathparts <- strsplit(path1, "\\/")
+  path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
+  newpath <- paste0(filepath, "/", path2)
+  downloaded<-list.files(newpath)
+  
+  #remove downloaded tiles, stop if nothing left to download
+  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
+  return(selected_tiles)
+}
 
 byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepath=NA) {
   
@@ -66,10 +144,10 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   }
   
   filter.size <- sum(as.numeric(as.character(selected_tiles$size)), na.rm=T)
-  filter.size.read <- humanReadable(filter.size, units = "auto", standard = "SI")
+  filter.size.read <- gdata::humanReadable(filter.size, units = "auto", standard = "SI")
   
   downld.size <- sum(as.numeric(as.character(file.urls.current$size)), na.rm=T)
-  downld.size.read <- humanReadable(downld.size, units = "auto", standard = "SI")
+  downld.size.read <- gdata::humanReadable(downld.size, units = "auto", standard = "SI")
   
   print(paste("Downloading" ,filter.size.read, "of",downld.size.read,"catalog"))
   
@@ -120,81 +198,4 @@ byPointsAOP <- function(dpID, site="SJER", year="2017", check.size=TRUE, savepat
   writeLines(paste0(messages, collapse = "\n"))
 }
 
-screenurls<-function(site,file.urls.current,dpID,savepath){
-  
-  ##Select plots for a given site
-  data(package="neonUtilities","plots")
-  print(head(plots))
-  site_plots<-plots %>% dplyr::filter(siteID==site) %>% dplyr::select(siteID,plotID,easting,northing)
-  
-  if(nrow(site_plots)==0){
-    stop("No vegetation data for the selected site")
-  }
-  
-  #Find geographic index of each plot
-  site_plots<-site_plots %>% dplyr::mutate(tile=paste(trunc(site_plots$easting/1000)*1000,trunc(site_plots$northing/1000)*1000,sep="_"))
-  
-  #Unique tiles
-  tiles<-unique(site_plots$tile)
-  
-  selected_tiles<-list()
-  for(x in 1:length(tiles)){
-    selected_tiles[[x]]<-file.urls.current[stringr::str_detect(file.urls.current$name,tiles[x]),]
-  }
-  selected_tiles<-dplyr::bind_rows(selected_tiles)
-  
-  if(dpID=="DP1.30010.001"){
-    #look for versions, only keep the highest number, group_by site
-    selected_tiles<-selected_tiles %>% dplyr::mutate(version=as.numeric(stringr::str_match(selected_tiles$URL,"/V(\\w+)/")[,2])) %>% 
-      group_by(plotID) %>% dplyr::filter(version==max(version))
-  }
-  
-  if(dpID=="DP1.30003.001"){
-    #Only classified laz
-    selected_tiles<-selected_tiles %>% dplyr::filter(stringr::str_detect(name,"_classified_"))
-  }
-  
-  #Check which tiles have already been downloaded
-  filepath <- paste(savepath, "/", dpID, sep="")
-  path1 <- strsplit(selected_tiles$URL[1], "\\?")[[1]][1]
-  pathparts <- strsplit(path1, "\\/")
-  path2 <- paste(pathparts[[1]][4:(length(pathparts[[1]])-1)], collapse="/")
-  newpath <- paste0(filepath, "/", path2)
-  downloaded<-list.files(newpath)
-  
-  #remove downloaded tiles, stop if nothing left to download
-  selected_tiles<-selected_tiles[!selected_tiles$name %in% downloaded,]
-  return(selected_tiles)
-}
 
-getFileUrls <- function(m.urls){
-  url.messages <- character()
-  file.urls <- c(NA, NA, NA,NA)
-  for(i in 1:length(m.urls)) {
-    tmp <- httr::GET(m.urls[i])
-    tmp.files <- jsonlite::fromJSON(httr::content(tmp, as="text"),
-                                    simplifyDataFrame=T, flatten=T)
-    
-    # check for no files
-    if(length(tmp.files$data$files)==0) {
-      url.messages <- c(url.messages, paste("No files found for site", tmp.files$data$siteCode,
-                                            "and year", tmp.files$data$month, sep=" "))
-      next
-    }
-    
-    file.urls <- rbind(file.urls, cbind(tmp.files$data$files$name,
-                                        tmp.files$data$files$url,
-                                        tmp.files$data$files$size,
-                                        tmp.files$data$siteCode))
-    
-    # get size info
-    file.urls <- data.frame(file.urls, row.names=NULL)
-    colnames(file.urls) <- c("name", "URL", "size","plotID")
-    file.urls$URL <- as.character(file.urls$URL)
-    file.urls$name <- as.character(file.urls$name)
-    
-    if(length(url.messages) > 0){writeLines(url.messages)}
-    file.urls <- file.urls[-1, ]
-    return(file.urls)
-  }
-}
